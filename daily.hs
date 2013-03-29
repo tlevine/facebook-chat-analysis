@@ -3,17 +3,9 @@ import           Database.HDBC
 import           Database.HDBC.Sqlite3   
 import qualified Data.Map                as M
 
-{-
-durations :: Connection
-durations conn = 
-  where
+data Status = LogIn | LogOut deriving (Enum, Show)
 
-users :: Connection -> M.Map String String
-users conn = M.fromList $ 
-  where
-    query = quickQuery conn "SELECT uid, nick FROM log_status GROUP BY uid;" []
--}
-
+-- Query
 getUsers :: Connection -> IO [(String, String)]
 getUsers conn = do
   query <- quickQuery conn sql []
@@ -22,7 +14,6 @@ getUsers conn = do
     sql = "SELECT uid, nick FROM log_status GROUP BY uid;"
     unSql results = map (\l -> (head l, last l)) $ map (map (\sql -> fromSql sql :: String)) results
 
-data Status = LogIn | LogOut | Other deriving (Enum, Show)
 
 getUserStatuses :: Connection -> String -> IO [(Integer, Status)]
 getUserStatuses conn uid = do
@@ -34,6 +25,18 @@ getUserStatuses conn uid = do
     status s = case s of
       "avail"    -> LogIn
       "notavail" -> LogOut
+
+-- User status features
+
+
+-- Total time online today
+totalTime :: [(Integer, Status)] -> Integer
+totalTime = snd $ foldrWithKey folder (0, 0)
+  where
+    increment prevTime thisTime LogIn  = thisTime - prevTime
+    increment prevTime thisTime LogOut = 0
+    folder thisTime status (prevTime, soFar) = soFar + (increment prevTime thisTime status)
+    s = M.fromList statuses
 
 main = do
   -- Connect
