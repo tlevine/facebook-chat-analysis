@@ -65,6 +65,5 @@ main = do
   statuses      <- getStatusesByUser conn
   let timeOnline = M.map totalTime $ M.fromList statuses
 
-  -- Finish
-  putStrLn $ show $ M.findMin timeOnline
-  disconnect conn
+  -- Print all of the times for today.
+  mapM_ print $ M.toAscList $ M.mapKeys (\k -> lookup k users) timeOnline
