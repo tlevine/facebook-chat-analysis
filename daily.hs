@@ -5,7 +5,10 @@ import qualified Data.Map                as M
 
 data Status = LogIn | LogOut deriving (Enum, Show)
 
+---------------------------------------
 -- Query
+---------------------------------------
+
 getUsers :: Connection -> IO [(String, String)]
 getUsers conn = do
   query <- quickQuery conn sql []
@@ -26,8 +29,9 @@ getUserStatuses conn uid = do
       "avail"    -> LogIn
       "notavail" -> LogOut
 
+---------------------------------------
 -- User status features
-
+---------------------------------------
 
 -- Total time online today
 totalTime :: [(Integer, Status)] -> Integer
@@ -38,7 +42,10 @@ totalTime = snd $ foldrWithKey folder (0, 0)
     folder thisTime status (prevTime, soFar) = soFar + (increment prevTime thisTime status)
     s = M.fromList statuses
 
+---------------------------------------
 main = do
+---------------------------------------
+
   -- Connect
   args <- getArgs
   conn <- connectSqlite3 $ head args
