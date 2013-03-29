@@ -18,8 +18,8 @@ getUsers conn = do
     unSql results = map (\l -> (head l, last l)) $ map (map (\sql -> fromSql sql :: String)) results
 
 
-getUserStatuses :: Connection -> String -> IO [(Integer, Status)]
-getUserStatuses conn uid = do
+getStatuses :: Connection -> String -> IO [(Integer, Status)]
+getStatuses conn uid = do
   query <- quickQuery conn sql [(toSql uid)]
   return $ map unSql query
   where
@@ -28,6 +28,16 @@ getUserStatuses conn uid = do
     status s = case s of
       "avail"    -> LogIn
       "notavail" -> LogOut
+
+getStatusesByUser :: Connection -> IO [(String, [(Integer, Status)])]
+getStatusesByUser conn = do
+  users    <- getUsers conn
+  let uids = map fst users
+
+  statuses <- mapM (getStatuses conn) uids
+  let statusesByUser = zip uids statuses
+
+  return statusesByUser
 
 ---------------------------------------
 -- User status features
@@ -52,10 +62,13 @@ main = do
 
   -- Query
   users    <- getUsers conn
-  statuses <- getUserStatuses conn "xmpp:-613350425@chat.facebook.com"
+  statuses <- getStatusesByUser conn
+
 
   -- Finish
 --putStrLn $ show $ users
-  putStrLn $ show $ statuses
-  putStrLn $ show $ totalTime statuses
+--putStrLn $ show $ statuses
+
+  putStrLn $ show $ s
+--putStrLn $ show $ M.map totalTime $ head statuses
   disconnect conn
