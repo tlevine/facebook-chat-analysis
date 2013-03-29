@@ -14,33 +14,38 @@ users conn = M.fromList $
     query = quickQuery conn "SELECT uid, nick FROM log_status GROUP BY uid;" []
 -}
 
-type Query = Connection -> IO [[String]]
-
-getQuery :: String -> String -> Query
-getQuery sql values conn = do
-  query <- quickQuery conn sql $ map toSql values
+getUsers :: Connection -> IO [(String, String)]
+getUsers conn = do
+  query <- quickQuery conn sql []
   return $ unSql query
   where
-    unSql :: [[SqlValue]] -> [[String]]
-    unSql = map $ map (\sql -> fromSql sql :: String)
+    sql = "SELECT uid, nick FROM log_status GROUP BY uid;"
+    unSql results = map (\l -> (head l, last l)) $ map (map (\sql -> fromSql sql :: String)) results
 
-getUsers :: Query
-getUsers = getQuery "SELECT uid, nick FROM log_status GROUP BY uid;" []
+data Status = LogIn | LogOut | Other deriving (Enum, Show)
 
-{-
-getUserStatus :: Connection -> IO [[String]]
-getUsers conn uid = do 
-  query <- quickQuery conn "SELECT * FROM log_status WHERE uid = ?" [uid]
-  return $ unSql query
--}
-
--- All features are maps from usernames to feature values.
-usernames :: [[String]] -> M.Map String String
-usernames query = M.fromList $ map (\l -> (head l, last l)) query
+getUserStatuses :: Connection -> String -> IO [(Integer, Status)]
+getUserStatuses conn uid = do
+  query <- quickQuery conn sql [(toSql uid)]
+  return $ map unSql query
+  where
+    sql = "SELECT ts,status FROM log_status WHERE uid = ?"
+    unSql row = ((fromSql $ head row) :: Integer, (status $ fromSql $ last row) :: Status)
+    status s = case s of
+      "avail"    -> LogIn
+      "notavail" -> LogOut
+      _          -> Other
 
 main = do
-  a <- getArgs
-  conn <- connectSqlite3 $ head a
-  users <- getUsers conn
-  putStrLn $ show $ usernames users
+  -- Connect
+  args <- getArgs
+  conn <- connectSqlite3 $ head args
+
+  -- Query
+  users    <- getUsers conn
+  statuses <- getUserStatuses conn "xmpp:-613350425@chat.facebook.com"
+
+  -- Finish
+--putStrLn $ show $ users
+  putStrLn $ show $ statuses
   disconnect conn
