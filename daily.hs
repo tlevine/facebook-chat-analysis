@@ -14,7 +14,9 @@ users conn = M.fromList $
     query = quickQuery conn "SELECT uid, nick FROM log_status GROUP BY uid;" []
 -}
 
-getQuery :: String -> String -> Connection -> IO [[String]]
+type Query = Connection -> IO [[String]]
+
+getQuery :: String -> String -> Query
 getQuery sql values conn = do
   query <- quickQuery conn sql $ map toSql values
   return $ unSql query
@@ -22,7 +24,7 @@ getQuery sql values conn = do
     unSql :: [[SqlValue]] -> [[String]]
     unSql = map $ map (\sql -> fromSql sql :: String)
 
-getUsers :: Connection -> IO [[String]]
+getUsers :: Query
 getUsers = getQuery "SELECT uid, nick FROM log_status GROUP BY uid;" []
 
 {-
