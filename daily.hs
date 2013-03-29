@@ -34,7 +34,6 @@ getUserStatuses conn uid = do
     status s = case s of
       "avail"    -> LogIn
       "notavail" -> LogOut
-      _          -> Other
 
 main = do
   -- Connect
