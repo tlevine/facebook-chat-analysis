@@ -45,11 +45,12 @@ getStatusesByUser conn = do
 
 -- Total time online today
 totalTime :: [(Integer, Status)] -> Integer
-totalTime statuses = snd $ M.foldrWithKey folder (0, 0) s
+totalTime statuses = snd $ M.foldlWithKey folder (0, 0) s
   where
-    increment thisTime prevTime LogIn  = thisTime - prevTime
-    increment thisTime prevTime LogOut = 0
-    folder prevTime status (thisTime, soFar) = (prevTime, soFar + (increment thisTime prevTime status))
+    increment thisTime 0 _ = 0
+    increment thisTime prevTime LogIn  = 0
+    increment thisTime prevTime LogOut = thisTime - prevTime
+    folder (prevTime, soFar) thisTime status = (thisTime, soFar + (increment thisTime prevTime status))
     s = M.fromList statuses
 
 ---------------------------------------
@@ -66,4 +67,4 @@ main = do
   let timeOnline = M.map totalTime $ M.fromList statuses
 
   -- Print all of the times for today.
-  mapM_ print $ M.toAscList $ M.mapKeys (\k -> lookup k users) timeOnline
+  mapM_ print $ take 9 $ M.toAscList $ M.mapKeys (\k -> lookup k users) timeOnline
