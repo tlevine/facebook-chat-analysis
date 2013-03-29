@@ -3,7 +3,7 @@ import           Database.HDBC
 import           Database.HDBC.Sqlite3   
 import qualified Data.Map                as M
 
-data Status = LogIn | LogOut deriving (Enum, Show)
+data Status = LogIn | LogOut deriving (Enum, Show, Eq)
 
 ---------------------------------------
 -- Query
@@ -53,6 +53,10 @@ totalTime statuses = snd $ M.foldlWithKey folder (0, 0) s
     folder (prevTime, soFar) thisTime status = (thisTime, soFar + (increment thisTime prevTime status))
     s = M.fromList statuses
 
+-- Number of sessions that a person spent online
+nSessions :: [(Integer, Status)] -> Integer
+nSessions statuses = fromIntegral $ length $ filter (== LogIn) $ map snd statuses
+
 ---------------------------------------
 main = do
 ---------------------------------------
@@ -63,8 +67,12 @@ main = do
 
   -- Query
   users         <- getUsers conn
-  statuses      <- getStatusesByUser conn
-  let timeOnline = M.map totalTime $ M.fromList statuses
+  statusesUid   <- getStatusesByUser conn
+  let statuses = M.mapKeys (\k -> lookup k users) $ M.fromList statusesUid
+  let timeOnline = M.map totalTime statuses
 
   -- Print all of the times for today.
-  mapM_ print $ take 9 $ M.toAscList $ M.mapKeys (\k -> lookup k users) timeOnline
+  mapM_ print $ take 9 $ M.toAscList timeOnline
+
+  -- Print the number of sessions
+  putStrLn $ show $ M.map nSessions statuses
