@@ -1,0 +1,3 @@
+[submodule "logs"]
+	path = logs
+	url = tlevine@secrets.thomaslevine.com:facebook-logs.git
