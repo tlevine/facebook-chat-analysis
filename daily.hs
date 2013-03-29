@@ -35,11 +35,11 @@ getUserStatuses conn uid = do
 
 -- Total time online today
 totalTime :: [(Integer, Status)] -> Integer
-totalTime = snd $ foldrWithKey folder (0, 0)
+totalTime statuses = snd $ M.foldrWithKey folder (0, 0) s
   where
-    increment prevTime thisTime LogIn  = thisTime - prevTime
-    increment prevTime thisTime LogOut = 0
-    folder thisTime status (prevTime, soFar) = soFar + (increment prevTime thisTime status)
+    increment thisTime prevTime LogIn  = thisTime - prevTime
+    increment thisTime prevTime LogOut = 0
+    folder prevTime status (thisTime, soFar) = (prevTime, soFar + (increment thisTime prevTime status))
     s = M.fromList statuses
 
 ---------------------------------------
@@ -57,4 +57,5 @@ main = do
   -- Finish
 --putStrLn $ show $ users
   putStrLn $ show $ statuses
+  putStrLn $ show $ totalTime statuses
   disconnect conn
