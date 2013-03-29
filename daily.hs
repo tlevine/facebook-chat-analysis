@@ -61,14 +61,10 @@ main = do
   conn <- connectSqlite3 $ head args
 
   -- Query
-  users    <- getUsers conn
-  statuses <- getStatusesByUser conn
-
+  users         <- getUsers conn
+  statuses      <- getStatusesByUser conn
+  let timeOnline = M.map totalTime $ M.fromList statuses
 
   -- Finish
---putStrLn $ show $ users
---putStrLn $ show $ statuses
-
-  putStrLn $ show $ s
---putStrLn $ show $ M.map totalTime $ head statuses
+  putStrLn $ show $ M.findMin timeOnline
   disconnect conn
