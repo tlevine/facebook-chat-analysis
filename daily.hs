@@ -78,7 +78,7 @@ deriving Generic
 instance FromNamedRecord Person
 instance ToNamedRecord   Person
 
-persons :: (M.Map String String) -> (M.Map String String) -> [Person]
+persons :: (M.Map String String) -> (M.Map String Integer) -> (M.Map String Integer) -> [Person]
 persons userMap totalTimeMap nSessionsMap = map buildPerson uids
   where
     uids = M.keys userMap
