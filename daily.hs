@@ -9,11 +9,17 @@ import           Data.Csv
 import qualified Data.Vector as V
 import           GHC.Generics
 
-data Person = Person String Int deriving Generic
-instance FromRecord Person
-instance ToRecord   Person
-
+-- Import types
 data Status = LogIn | LogOut deriving (Enum, Show, Eq)
+type DateTime = Integer
+
+-- Clean types
+type Session = (DateTime, DateTime)
+newtype Uid  = String
+newtype Nick = String
+data User = User { uid      :: Uid
+                 , nick     :: Nick
+                 , sessions :: [Session]
 
 ---------------------------------------
 -- Query
@@ -66,27 +72,6 @@ totalTime statuses = snd $ M.foldlWithKey folder (0, 0) s
 -- Number of sessions that a person spent online
 nSessions :: [(Integer, Status)] -> Integer
 nSessions statuses = fromIntegral $ length $ filter (== LogIn) $ map snd statuses
-
--- Save as CSV.
-data Person = Person
-    { uid        :: String
-    , nick       :: String
-    , time       :: Integer
-    , nSessions  :: Integer
-    }
-deriving Generic
-instance FromNamedRecord Person
-instance ToNamedRecord   Person
-
-persons :: (M.Map String String) -> (M.Map String Integer) -> (M.Map String Integer) -> [Person]
-persons userMap totalTimeMap nSessionsMap = map buildPerson uids
-  where
-    uids = M.keys userMap
-    buildPerson uid = Person { uid       = uid
-                             , nick      = M.lookup uid userMap
-                             , time      = M.lookup uid totalTimeMap
-                             , nSessions = M.lookup uid nSessionsMap
-                             }
 
 ---------------------------------------
 main = do
