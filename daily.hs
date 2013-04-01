@@ -70,6 +70,7 @@ toSessions status:statuses = fst $ foldl folder ([], status) statuses
 -- User status features
 ---------------------------------------
 
+{-
 -- Total time online today
 totalTime :: [(Integer, Status)] -> Integer
 totalTime statuses = snd $ M.foldlWithKey folder (0, 0) s
@@ -83,6 +84,7 @@ totalTime statuses = snd $ M.foldlWithKey folder (0, 0) s
 -- Number of sessions that a person spent online
 nSessions :: [(Integer, Status)] -> Integer
 nSessions statuses = fromIntegral $ length $ filter (== LogIn) $ map snd statuses
+-}
 
 ---------------------------------------
 main = do
@@ -95,11 +97,12 @@ main = do
   -- Query
   users         <- getUsers conn
   statusesUid   <- getStatusesByUser conn
-  let statuses = M.mapKeys (\k -> lookup k users) $ M.fromList statusesUid
-  let timeOnline = M.map totalTime statuses
+  let statuses = M.map (M.toAscList . toSession) $ M.mapKeys (\k -> lookup k users) $ M.fromList statusesUid
 
+  {-
   -- Print all of the times for today.
   mapM_ print $ take 9 $ M.toAscList timeOnline
 
   -- Print the number of sessions
   putStrLn $ show $ M.map nSessions statuses
+  -}
