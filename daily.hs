@@ -14,12 +14,13 @@ data Status = LogIn | LogOut deriving (Enum, Show, Eq)
 type DateTime = Integer
 
 -- Clean types
-type Session = (DateTime, DateTime)
 newtype Uid  = String
 newtype Nick = String
+type Session = (DateTime, DateTime)
 data User = User { uid      :: Uid
                  , nick     :: Nick
                  , sessions :: [Session]
+} deriving (Show, Eq)
 
 ---------------------------------------
 -- Query
@@ -54,6 +55,16 @@ getStatusesByUser conn = do
   let statusesByUser = zip uids statuses
 
   return statusesByUser
+
+---------------------------------------
+-- Convert to the Session type
+---------------------------------------
+toSessions :: [(Integer, Status)] -> [Session]
+toSessions status:statuses = fst $ foldl folder ([], status) statuses
+  where
+    folder :: ([Sessions], Status) -> Status -> ([Sessions], Status)
+    folder (sessions, (prevTime, LogIn )) (thisTime, LogOut) = ((prevTime, thisTime):sessions, (thisTime, LogOut))
+    folder (sessions, (prevTime, LogOut)) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
 
 ---------------------------------------
 -- User status features
