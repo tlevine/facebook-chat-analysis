@@ -13,7 +13,7 @@ type Nick    = String
 type NickUid = String
 
 type Session = (DateTime, DateTime)
-data User    = M.Map NickUid [Session]
+type Users   = M.Map NickUid [Session]
 
 -- Export types
 type Exportable1 a         = [(NickUid, DateTime, a)]
@@ -65,10 +65,12 @@ toSessions (statusUpdate:statusUpdates) = fst $ foldl folder ([], statusUpdate) 
     folder :: ([Session], (DateTime, Status)) -> (DateTime, Status) -> ([Session], (DateTime, Status))
     folder (sessions, (prevTime, LogIn )) (thisTime, LogOut) = ((prevTime, thisTime):sessions, (thisTime, LogOut))
     folder (sessions, (prevTime, LogOut)) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
+    folder (sessions, (prevTime, LogOut)) (thisTime, LogOut) = (sessions, (prevTime, LogOut))
+    folder (sessions, (prevTime, LogIn )) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
 
 -- Name by nick and uid instead of just uid.
-nickTables :: [(Uid, Nick)] -> [(String, [(DateTime, Status)])] -> M.Map Nick [(DateTime, Status)]
-nickTables nicks statusesByUser = M.mapKeys nickLookup $ M.fromList statusesByUser
+nickTables :: [(Uid, Nick)] -> [(String, [(DateTime, Status)])] -> Users
+nickTables nicks statusesByUser = M.map toSessions $ M.mapKeys nickLookup $ M.fromList statusesByUser
   where
     nickLookup :: Uid -> Nick
     nickLookup uid = case (M.lookup uid $ M.fromList nicks) of
