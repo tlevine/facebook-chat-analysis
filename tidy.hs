@@ -54,7 +54,7 @@ getStatusesByUser conn = do
 ---------------------------------------
 -- Convert to the Session type
 ---------------------------------------
-toSessions :: [(Integer, Status)] -> [Session]
+toSessions :: [(DateTime, Status)] -> [Session]
 toSessions (status:statuses) = fst $ foldl folder ([], status) statuses
   where
     folder :: ([Session], Status) -> Status -> ([Session], Status)
