@@ -8,17 +8,14 @@ import qualified Data.Map                as M
 data Status = LogIn | LogOut deriving (Enum, Show, Eq)
 type DateTime = Integer
 
--- Clean types
 type Uid     = String
 type Nick    = String
+type NickUid = String
+
 type Session = (DateTime, DateTime)
-data User = User { uid      :: Uid
-                 , nick     :: Nick
-                 , sessions :: [Session]
-} deriving (Show, Eq)
+data User    = M.Map NickUid [Session]
 
 -- Export types
-type NickUid    = String
 type Exportable1 a         = [(NickUid, DateTime, a)]
 type Exportable2 a b       = [(NickUid, DateTime, a, b)]
 type Exportable3 a b c     = [(NickUid, DateTime, a, b, c)]
