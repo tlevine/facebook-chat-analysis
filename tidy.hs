@@ -74,6 +74,12 @@ nickTables nicks statusesByUser = M.map toSessions $ M.mapKeys nickLookup $ M.fr
 -- User status features
 ---------------------------------------
 
+-- Time spans are in minutes
+seqDateTime :: Integer -> Integer -> D.DateTime -> D.DateTime -> [D.DateTime]
+seqDateTime period binWidth 
+  where
+    breaks = unfoldr (\ datetime -> addMinutes
+
 {-
 -- Total time online today
 totalTime :: [(Integer, Status)] -> Integer
@@ -91,9 +97,11 @@ nSessions statuses = fromIntegral $ length $ filter (== LogIn) $ map snd statuse
 -}
 
 ---------------------------------------
--- Build feature and export
+-- Build user features and export
 ---------------------------------------
 {-
+http://hackage.haskell.org/packages/archive/probability/0.2.2/doc/html/Numeric-Probability-Distribution.html
+
 [(NickUid, DateTime, a)]
 
 export :: Users -> ([Session] -> [Integer]) ->
