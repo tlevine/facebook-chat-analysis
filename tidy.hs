@@ -84,6 +84,11 @@ weekByHour   = "(%w) %H %A"
 dayByMinute  = "%H:%M"
 dayByHour    = "%H"
 
+
+-- Time span (list of bins), given an ascending list
+timeBins :: Integer -> DateTime -> DateTime -> [D.DateTime]
+timeBins binWidth minDate maxDate = map fromSeconds [((toSeconds minDate)/binWidth)..((toSeconds maxDate)/binWidth)]
+
 -- Length of a session in seconds
 sessionLength :: Session -> Integer
 sessionLength (start, end) = (toSeconds end) - (toSeconds start)
