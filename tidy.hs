@@ -28,18 +28,18 @@ getUsers conn = do
     unSql results = map (\l -> (head l, last l)) $ map (map (\sql -> fromSql sql :: String)) results
 
 
-getStatuses :: Connection -> String -> IO [(Integer, Status)]
+getStatuses :: Connection -> String -> IO [(D.DateTime, Status)]
 getStatuses conn uid = do
   query <- quickQuery conn sql [(toSql uid)]
   return $ map unSql query
   where
     sql = "SELECT ts,status FROM log_status WHERE uid = ?"
-    unSql row = ((fromSql $ head row) :: Integer, (status $ fromSql $ last row) :: Status)
+    unSql row = (D.fromSeconds ((fromSql $ head row) :: Integer), (status $ fromSql $ last row) :: Status)
     status s = case s of
       "avail"    -> LogIn
       "notavail" -> LogOut
 
-getStatusesByUser :: Connection -> IO [(String, [(Integer, Status)])]
+getStatusesByUser :: Connection -> IO [(String, [(D.DateTime, Status)])]
 getStatusesByUser conn = do
   users    <- getUsers conn
   let uids = map fst users
@@ -52,16 +52,14 @@ getStatusesByUser conn = do
 ---------------------------------------
 -- Convert to the Session type
 ---------------------------------------
-toSessions :: [(Integer, Status)] -> [Session]
-toSessions (statusUpdate:statusUpdates) = fst $ foldl folder ([], statusUpdate) $ map toDateTime statusUpdates
-  where
-    folder :: ([Session], (D.DateTime, Status)) -> (D.DateTime, Status) -> ([Session], (D.DateTime, Status))
-    folder (sessions, (prevTime, LogIn )) (thisTime, LogOut) = ((prevTime, thisTime):sessions, (thisTime, LogOut))
-    folder (sessions, (prevTime, LogOut)) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
-    folder (sessions, (prevTime, LogOut)) (thisTime, LogOut) = (sessions, (prevTime, LogOut))
-    folder (sessions, (prevTime, LogIn )) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
-    toDateTime :: (Integer, Status) -> (D.DateTime, Status)
-    toDateTime (d, s) = (fromSeconds d, s)
+folder :: ([Session], (D.DateTime, Status)) -> (D.DateTime, Status) -> ([Session], (D.DateTime, Status))
+folder (sessions, (prevTime, LogIn )) (thisTime, LogOut) = ((prevTime, thisTime):sessions, (thisTime, LogOut))
+folder (sessions, (prevTime, LogOut)) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
+folder (sessions, (prevTime, LogOut)) (thisTime, LogOut) = (sessions, (prevTime, LogOut))
+folder (sessions, (prevTime, LogIn )) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
+
+toSessions :: [(D.DateTime, Status)] -> [Session]
+toSessions (statusUpdate:statusUpdates) = fst $ foldl folder ([], statusUpdate) statusUpdates
 
 -- Name by nick and uid instead of just uid.
 nickTables :: [(Uid, Nick)] -> [(String, [(D.DateTime, Status)])] -> Users
