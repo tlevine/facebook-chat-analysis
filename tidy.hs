@@ -55,9 +55,9 @@ getStatusesByUser conn = do
 -- Convert to the Session type
 ---------------------------------------
 toSessions :: [(DateTime, Status)] -> [Session]
-toSessions (status:statuses) = fst $ foldl folder ([], status) statuses
+toSessions (statusUpdate:statusUpdates) = fst $ foldl folder ([], statusUpdate) statusUpdates
   where
-    folder :: ([Session], Status) -> Status -> ([Session], Status)
+    folder :: ([Session], (DateTime, Status)) -> (DateTime, Status) -> ([Session], (DateTime, Status))
     folder (sessions, (prevTime, LogIn )) (thisTime, LogOut) = ((prevTime, thisTime):sessions, (thisTime, LogOut))
     folder (sessions, (prevTime, LogOut)) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
 
@@ -92,7 +92,7 @@ main = do
   -- Query
   users         <- getUsers conn
   statusesUid   <- getStatusesByUser conn
-  let statuses = M.map (M.toAscList . toSessions) $ M.mapKeys (\k -> lookup k users) $ M.fromList statusesUid
+  -- let statuses = M.map (M.toAscList . toSessions) $ M.mapKeys (\k -> lookup k users) $ M.fromList statusesUid
 
   {-
   -- Print all of the times for today.
@@ -102,4 +102,5 @@ main = do
   putStrLn $ show $ M.map nSessions statuses
   -}
 
-  return statuses
+  -- return statuses
+  print "a"
