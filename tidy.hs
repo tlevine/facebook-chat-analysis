@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables, DeriveGeneric #-}
 import           System.Environment      (getArgs)
-import           Database.HDBC           
-import           Database.HDBC.Sqlite3   
+import           Database.HDBC           (quickQuery, fromSql, toSql)
+import           Database.HDBC.Sqlite3   (Connection, connectSqlite3)
 import qualified Data.Map                as M
 import           Data.DateTime           as D
 
