@@ -61,6 +61,14 @@ toSessions (statusUpdate:statusUpdates) = fst $ foldl folder ([], statusUpdate) 
     folder (sessions, (prevTime, LogIn )) (thisTime, LogOut) = ((prevTime, thisTime):sessions, (thisTime, LogOut))
     folder (sessions, (prevTime, LogOut)) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
 
+sessionTables :: [(Uid, Nick)] -> [(String, [(DateTime, Status)])] -> M.Map Nick [(DateTime, Status)]
+sessionTables nicks statusesByUser = M.mapKeys nickLookup $ M.fromList statusesByUser
+  where
+    nickLookup :: Uid -> Nick
+    nickLookup uid = case (M.lookup uid $ M.fromList nicks) of
+      Just x   -> x
+      Nothing  -> uid
+
 ---------------------------------------
 -- User status features
 ---------------------------------------
@@ -90,9 +98,9 @@ main = do
   conn <- connectSqlite3 $ head args
 
   -- Query
-  users         <- getUsers conn
-  statusesUid   <- getStatusesByUser conn
-  -- let statuses = M.map (M.toAscList . toSessions) $ M.mapKeys (\k -> lookup k users) $ M.fromList statusesUid
+  nicks          <- getUsers conn
+  statusesByUser <- getStatusesByUser conn
+  -- let statuses = M.map (M.toAscList . toSessions) $ 
 
   {-
   -- Print all of the times for today.
@@ -103,4 +111,4 @@ main = do
   -}
 
   -- return statuses
-  print "a"
+  putStrLn $ show $ sessionTables nicks statusesByUser
