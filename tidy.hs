@@ -74,12 +74,17 @@ nickTables nicks statusesByUser = M.map toSessions $ M.mapKeys nickLookup $ M.fr
 -- User status features
 ---------------------------------------
 
--- Time spans are in minutes
-seqDateTime :: Integer -> Integer -> D.DateTime -> D.DateTime -> [D.DateTime]
-seqDateTime period binWidth 
-  where
-    breaks = unfoldr (\ datetime -> addMinutes
+lifeByMinute = "%Y-%m-%d %H:%M"
+lifeByHour   = "%Y-%m-%d %H"
+lifeByDay    = "%Y-%m-%d"
 
+weekByMinute = "(%w) %H:%M %A"
+weekByHour   = "(%w) %H %A"
+
+dayByMinute  = "%H:%M"
+dayByHour    = "%H"
+
+-- Time spans are in minutes
 {-
 -- Total time online today
 totalTime :: [(Integer, Status)] -> Integer
