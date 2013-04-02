@@ -9,7 +9,7 @@ data Status = LogIn | LogOut deriving (Enum, Show, Eq)
 type DateTime = Integer
 
 -- Clean types
-newtype Uid  = String
+type Uid  = String
 type Nick = String
 type Session = (DateTime, DateTime)
 data User = User { uid      :: Uid
@@ -57,7 +57,7 @@ getStatusesByUser conn = do
 toSessions :: [(Integer, Status)] -> [Session]
 toSessions (status:statuses) = fst $ foldl folder ([], status) statuses
   where
-    folder :: ([Sessions], Status) -> Status -> ([Sessions], Status)
+    folder :: ([Session], Status) -> Status -> ([Session], Status)
     folder (sessions, (prevTime, LogIn )) (thisTime, LogOut) = ((prevTime, thisTime):sessions, (thisTime, LogOut))
     folder (sessions, (prevTime, LogOut)) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
 
@@ -101,3 +101,5 @@ main = do
   -- Print the number of sessions
   putStrLn $ show $ M.map nSessions statuses
   -}
+
+  return statuses
