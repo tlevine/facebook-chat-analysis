@@ -12,7 +12,8 @@ type Uid     = String
 type Nick    = String
 type NickUid = String
 
-type Session = (D.DateTime, D.DateTime)
+newtype DateInteger = DateInteger Integer
+type Session = (DateInteger, DateInteger)
 type Users   = M.Map NickUid [Session]
 
 ---------------------------------------
@@ -28,18 +29,18 @@ getUsers conn = do
     unSql results = map (\l -> (head l, last l)) $ map (map (\sql -> fromSql sql :: String)) results
 
 
-getStatuses :: Connection -> String -> IO [(D.DateTime, Status)]
+getStatuses :: Connection -> String -> IO [(DateInteger, Status)]
 getStatuses conn uid = do
   query <- quickQuery conn sql [(toSql uid)]
   return $ map unSql query
   where
     sql = "SELECT ts,status FROM log_status WHERE uid = ?"
-    unSql row = (D.fromSeconds ((fromSql $ head row) :: Integer), (status $ fromSql $ last row) :: Status)
+    unSql row = (((fromSql $ head row) :: DateInteger), ((status $ fromSql $ last row) :: Status))
     status s = case s of
       "avail"    -> LogIn
       "notavail" -> LogOut
 
-getStatusesByUser :: Connection -> IO [(String, [(D.DateTime, Status)])]
+getStatusesByUser :: Connection -> IO [(String, [(DateInteger, Status)])]
 getStatusesByUser conn = do
   users    <- getUsers conn
   let uids = map fst users
@@ -52,17 +53,17 @@ getStatusesByUser conn = do
 ---------------------------------------
 -- Convert to the Session type
 ---------------------------------------
-folder :: ([Session], (D.DateTime, Status)) -> (D.DateTime, Status) -> ([Session], (D.DateTime, Status))
+folder :: ([Session], (DateInteger, Status)) -> (DateInteger, Status) -> ([Session], (DateInteger, Status))
 folder (sessions, (prevTime, LogIn )) (thisTime, LogOut) = ((prevTime, thisTime):sessions, (thisTime, LogOut))
 folder (sessions, (prevTime, LogOut)) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
 folder (sessions, (prevTime, LogOut)) (thisTime, LogOut) = (sessions, (prevTime, LogOut))
 folder (sessions, (prevTime, LogIn )) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
 
-toSessions :: [(D.DateTime, Status)] -> [Session]
+toSessions :: [(DateInteger, Status)] -> [Session]
 toSessions (statusUpdate:statusUpdates) = fst $ foldl folder ([], statusUpdate) statusUpdates
 
 -- Name by nick and uid instead of just uid.
-nickTables :: [(Uid, Nick)] -> [(String, [(D.DateTime, Status)])] -> Users
+nickTables :: [(Uid, Nick)] -> [(String, [(DateInteger, Status)])] -> Users
 nickTables nicks statusesByUser = M.map toSessions $ M.mapKeys nickLookup $ M.fromList statusesByUser
   where
     nickLookup :: Uid -> Nick
@@ -74,24 +75,13 @@ nickTables nicks statusesByUser = M.map toSessions $ M.mapKeys nickLookup $ M.fr
 -- User status features
 ---------------------------------------
 
-lifeByMinute = "%Y-%m-%d %H:%M"
-lifeByHour   = "%Y-%m-%d %H"
-lifeByDay    = "%Y-%m-%d"
-
-weekByMinute = "(%w) %H:%M %A"
-weekByHour   = "(%w) %H %A"
-
-dayByMinute  = "%H:%M"
-dayByHour    = "%H"
-
-
--- Time span (list of bins), given an ascending list
-timeBins :: Integer -> DateTime -> DateTime -> [D.DateTime]
+-- Time span (list of bins)
+timeBins :: Integer -> DateInteger -> DateInteger -> [DateInteger]
 timeBins binWidth minDate maxDate = map fromSeconds [((toSeconds minDate)/binWidth)..((toSeconds maxDate)/binWidth)]
 
--- Length of a session in seconds
-sessionLength :: Session -> Integer
-sessionLength (start, end) = (toSeconds end) - (toSeconds start)
+-- Time online by bin, given an ascending list
+timeOnline :: [DateInteger] -> [Session] -> Integer
+timeOnline bins 
 
 -- Number of session beginnings by bin
 nSessionBeginnings :: String -> [Session]
@@ -137,7 +127,22 @@ main = do
 
   -- Print the number of sessions
   putStrLn $ show $ M.map nSessions statuses
-  -}
+
+
+  ---------------------
+  -- Tables for graphs
+  -- x=time, group=user
+  ---------------------
+
+  ---- Raw online status ----
+  -- Daily online status pdf
+  -- Weekly online status pdf
+  -- Absolute online status
+
+  ---- Franticness ----
+
+
+    -}
 
   -- return statuses
   putStrLn $ show $ nickTables nicks statusesByUser
