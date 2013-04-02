@@ -4,18 +4,13 @@ import           Database.HDBC
 import           Database.HDBC.Sqlite3   
 import qualified Data.Map                as M
 
-import qualified Data.ByteString.Lazy as BL
-import           Data.Csv
-import qualified Data.Vector as V
-import           GHC.Generics
-
 -- Import types
 data Status = LogIn | LogOut deriving (Enum, Show, Eq)
 type DateTime = Integer
 
 -- Clean types
 newtype Uid  = String
-newtype Nick = String
+type Nick = String
 type Session = (DateTime, DateTime)
 data User = User { uid      :: Uid
                  , nick     :: Nick
@@ -60,7 +55,7 @@ getStatusesByUser conn = do
 -- Convert to the Session type
 ---------------------------------------
 toSessions :: [(Integer, Status)] -> [Session]
-toSessions status:statuses = fst $ foldl folder ([], status) statuses
+toSessions (status:statuses) = fst $ foldl folder ([], status) statuses
   where
     folder :: ([Sessions], Status) -> Status -> ([Sessions], Status)
     folder (sessions, (prevTime, LogIn )) (thisTime, LogOut) = ((prevTime, thisTime):sessions, (thisTime, LogOut))
@@ -97,7 +92,7 @@ main = do
   -- Query
   users         <- getUsers conn
   statusesUid   <- getStatusesByUser conn
-  let statuses = M.map (M.toAscList . toSession) $ M.mapKeys (\k -> lookup k users) $ M.fromList statusesUid
+  let statuses = M.map (M.toAscList . toSessions) $ M.mapKeys (\k -> lookup k users) $ M.fromList statusesUid
 
   {-
   -- Print all of the times for today.
