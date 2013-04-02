@@ -15,13 +15,6 @@ type NickUid = String
 type Session = (DateTime, DateTime)
 type Users   = M.Map NickUid [Session]
 
--- Export types
-type Exportable1 a         = [(NickUid, DateTime, a)]
-type Exportable2 a b       = [(NickUid, DateTime, a, b)]
-type Exportable3 a b c     = [(NickUid, DateTime, a, b, c)]
-type Exportable4 a b c d   = [(NickUid, DateTime, a, b, c, d)]
-type Exportable5 a b c d e = [(NickUid, DateTime, a, b, c, d, e)]
-
 ---------------------------------------
 -- Query
 ---------------------------------------
@@ -96,6 +89,14 @@ totalTime statuses = snd $ M.foldlWithKey folder (0, 0) s
 nSessions :: [(Integer, Status)] -> Integer
 nSessions statuses = fromIntegral $ length $ filter (== LogIn) $ map snd statuses
 -}
+
+---------------------------------------
+-- Build feature and export
+---------------------------------------
+[(NickUid, DateTime, a)]
+
+export :: Users -> ([Session] -> [Integer]) ->
+type Users   = M.Map NickUid [Session]
 
 ---------------------------------------
 main = do
