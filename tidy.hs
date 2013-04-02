@@ -9,13 +9,21 @@ data Status = LogIn | LogOut deriving (Enum, Show, Eq)
 type DateTime = Integer
 
 -- Clean types
-type Uid  = String
-type Nick = String
+type Uid     = String
+type Nick    = String
 type Session = (DateTime, DateTime)
 data User = User { uid      :: Uid
                  , nick     :: Nick
                  , sessions :: [Session]
 } deriving (Show, Eq)
+
+-- Export types
+type NickUid    = String
+type Exportable1 a         = [(NickUid, DateTime, a)]
+type Exportable2 a b       = [(NickUid, DateTime, a, b)]
+type Exportable3 a b c     = [(NickUid, DateTime, a, b, c)]
+type Exportable4 a b c d   = [(NickUid, DateTime, a, b, c, d)]
+type Exportable5 a b c d e = [(NickUid, DateTime, a, b, c, d, e)]
 
 ---------------------------------------
 -- Query
