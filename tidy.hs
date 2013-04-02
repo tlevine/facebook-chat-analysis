@@ -3,16 +3,16 @@ import           System.Environment      (getArgs)
 import           Database.HDBC           
 import           Database.HDBC.Sqlite3   
 import qualified Data.Map                as M
+import           Data.DateTime           as D
 
 -- Import types
 data Status = LogIn | LogOut deriving (Enum, Show, Eq)
-type DateTime = Integer
 
 type Uid     = String
 type Nick    = String
 type NickUid = String
 
-type Session = (DateTime, DateTime)
+type Session = (D.DateTime, D.DateTime)
 type Users   = M.Map NickUid [Session]
 
 ---------------------------------------
@@ -52,17 +52,19 @@ getStatusesByUser conn = do
 ---------------------------------------
 -- Convert to the Session type
 ---------------------------------------
-toSessions :: [(DateTime, Status)] -> [Session]
-toSessions (statusUpdate:statusUpdates) = fst $ foldl folder ([], statusUpdate) statusUpdates
+toSessions :: [(Integer, Status)] -> [Session]
+toSessions (statusUpdate:statusUpdates) = fst $ foldl folder ([], statusUpdate) $ map toDateTime statusUpdates
   where
-    folder :: ([Session], (DateTime, Status)) -> (DateTime, Status) -> ([Session], (DateTime, Status))
+    folder :: ([Session], (D.DateTime, Status)) -> (D.DateTime, Status) -> ([Session], (D.DateTime, Status))
     folder (sessions, (prevTime, LogIn )) (thisTime, LogOut) = ((prevTime, thisTime):sessions, (thisTime, LogOut))
     folder (sessions, (prevTime, LogOut)) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
     folder (sessions, (prevTime, LogOut)) (thisTime, LogOut) = (sessions, (prevTime, LogOut))
     folder (sessions, (prevTime, LogIn )) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
+    toDateTime :: (Integer, Status) -> (D.DateTime, Status)
+    toDateTime (d, s) = (fromSeconds d, s)
 
 -- Name by nick and uid instead of just uid.
-nickTables :: [(Uid, Nick)] -> [(String, [(DateTime, Status)])] -> Users
+nickTables :: [(Uid, Nick)] -> [(String, [(D.DateTime, Status)])] -> Users
 nickTables nicks statusesByUser = M.map toSessions $ M.mapKeys nickLookup $ M.fromList statusesByUser
   where
     nickLookup :: Uid -> Nick
@@ -93,11 +95,12 @@ nSessions statuses = fromIntegral $ length $ filter (== LogIn) $ map snd statuse
 ---------------------------------------
 -- Build feature and export
 ---------------------------------------
+{-
 [(NickUid, DateTime, a)]
 
 export :: Users -> ([Session] -> [Integer]) ->
 type Users   = M.Map NickUid [Session]
-
+-}
 ---------------------------------------
 main = do
 ---------------------------------------
