@@ -61,12 +61,13 @@ toSessions (statusUpdate:statusUpdates) = fst $ foldl folder ([], statusUpdate) 
     folder (sessions, (prevTime, LogIn )) (thisTime, LogOut) = ((prevTime, thisTime):sessions, (thisTime, LogOut))
     folder (sessions, (prevTime, LogOut)) (thisTime, LogIn ) = (sessions, (thisTime, LogIn))
 
-sessionTables :: [(Uid, Nick)] -> [(String, [(DateTime, Status)])] -> M.Map Nick [(DateTime, Status)]
-sessionTables nicks statusesByUser = M.mapKeys nickLookup $ M.fromList statusesByUser
+-- Name by nick and uid instead of just uid.
+nickTables :: [(Uid, Nick)] -> [(String, [(DateTime, Status)])] -> M.Map Nick [(DateTime, Status)]
+nickTables nicks statusesByUser = M.mapKeys nickLookup $ M.fromList statusesByUser
   where
     nickLookup :: Uid -> Nick
     nickLookup uid = case (M.lookup uid $ M.fromList nicks) of
-      Just x   -> x
+      Just x   -> x ++ " (" ++ uid ++ ")"
       Nothing  -> uid
 
 ---------------------------------------
@@ -111,4 +112,4 @@ main = do
   -}
 
   -- return statuses
-  putStrLn $ show $ sessionTables nicks statusesByUser
+  putStrLn $ show $ nickTables nicks statusesByUser
