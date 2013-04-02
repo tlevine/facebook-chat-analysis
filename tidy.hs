@@ -84,17 +84,18 @@ weekByHour   = "(%w) %H %A"
 dayByMinute  = "%H:%M"
 dayByHour    = "%H"
 
--- Time spans are in minutes
-{-
--- Total time online today
-totalTime :: [(Integer, Status)] -> Integer
-totalTime statuses = snd $ M.foldlWithKey folder (0, 0) s
+-- Length of a session in seconds
+sessionLength :: Session -> Integer
+sessionLength (start, end) = (toSeconds end) - (toSeconds start)
+
+-- Number of session beginnings by bin
+nSessionBeginnings :: String -> [Session]
+nSessionBeginnings bin sessions = 
   where
-    increment thisTime 0 _ = 0
-    increment thisTime prevTime LogIn  = 0
-    increment thisTime prevTime LogOut = thisTime - prevTime
-    folder (prevTime, soFar) thisTime status = (thisTime, soFar + (increment thisTime prevTime status))
-    s = M.fromList statuses
+    map (fst . (formatDateTime bin)) sessions
+
+ :: String -> [Session] -> Integer
+ timeFormat sessions = map sessionLength sessions
 
 -- Number of sessions that a person spent online
 nSessions :: [(Integer, Status)] -> Integer
