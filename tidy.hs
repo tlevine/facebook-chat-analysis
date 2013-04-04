@@ -98,9 +98,17 @@ nullPdf binWidth minDate maxDate = (0, M.fromList $ zip zero datetimes)
     datetimes = [(r minDate)..(r maxDate)]
     zeroes = take (length datetimes) $ repeat 0
 
+-- Time online, from a list of a user's sessions
 onlinePdf :: (Pdf, [Session]) -> Pdf
-onlinePdf ((n, pdf), session:[])       = ((n + 1, newPdf),  
-onlinePdf ((n, pdf), session:sessions) = ((
+onlinePdf ((n, pdf), session:[])       = (n + 1, newPdf) 
+onlinePdf ((n, pdf), session:sessions) = onlinePdf ((n + 1, newPdf), sessions)
+  where
+    incPdf :: M.Map DateTime Integer
+    incPdf key = (M.adjust (+ 1) key)
+
+    -- Sooo inefficient...
+    keysToIncrement = filter (\dt -> (dt >= (fst session)) && (dt < (snd session))) $ M.keys pdf
+    newPdf = foldl incPdf pdf keysToIncrement
 
 
 --
