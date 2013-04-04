@@ -75,6 +75,9 @@ nickTables nicks statusesByUser = M.map toSessions $ M.mapKeys nickLookup $ M.fr
 -- Build user features and export
 ---------------------------------------
 
+
+------- OOPS! I need the modulus.
+
 -- (n, counts)
 type Pdf = (Integer, M.Map DateTime Integer)
 
@@ -87,9 +90,9 @@ nullPdf binWidth minDate maxDate = (0, M.fromList $ zip zero datetimes)
     zeroes = take (length datetimes) $ repeat 0
 
 -- Time online, from a list of a user's sessions
-onlinePdf :: (Pdf, [Session]) -> Pdf
-onlinePdf ((n, pdf), session:[])       = (n + 1, newPdf) 
-onlinePdf ((n, pdf), session:sessions) = onlinePdf ((n + 1, newPdf), sessions)
+buildOnlinePdf :: Pdf -> [Session] -> Pdf
+buildOnlinePdf (n, pdf) (session:[])       = (n + 1, newPdf)
+buildOnlinePdf (n, pdf) (session:sessions) = buildOnlinePdf (n + 1, newPdf) sessions
   where
     incPdf :: M.Map DateTime Integer
     incPdf key = (M.adjust (+ 1) key)
@@ -98,7 +101,9 @@ onlinePdf ((n, pdf), session:sessions) = onlinePdf ((n + 1, newPdf), sessions)
     keysToIncrement = filter (\dt -> (dt >= (fst session)) && (dt < (snd session))) $ M.keys pdf
     newPdf = foldl incPdf pdf keysToIncrement
 
-foo = onlinePdf (nullPdf (5 * 60) ...)
+-- The list of sessions *must* be in cronological order
+onlinePdf :: [Session] -> Pdf
+onlinePdf = buildOnlinePdf (nullPdf (5 * 60) minDate maxDate)
 
 ---------------------------------------
 main = do
