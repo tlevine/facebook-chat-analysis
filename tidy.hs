@@ -80,16 +80,32 @@ roundToBin :: Integer -> Integer -> Integer
 roundToBin binWidth datetime = binWidth * (round $ datetime/bin)
 
 -- Time span (list of bins)
-timeBins :: Integer -> DateInteger -> DateInteger -> [DateInteger]
-timeBins binWidth minDate maxDate = [(r minDate)..(r maxDate)]
-  where
-    r = roundToBin binWidth
 
 -- Time online by bin, given an ascending list
 timeOnline :: Integer -> [DateInteger] -> Integer
 timeOnline binWidth sessions = map ( \ (a, b) -> (r a, r b) ) sessions
   where
     r = roundToBin binWidth
+
+-- (n, counts)
+type Pdf = (Integer, M.Map DateTime Integer)
+
+-- The base pdf
+nullPdf :: Integer -> DateInteger -> DateInteger -> Pdf
+nullPdf binWidth minDate maxDate = (0, M.fromList $ zip zero datetimes)
+  where
+    r = roundToBin binWidth
+    datetimes = [(r minDate)..(r maxDate)]
+    zeroes = take (length datetimes) $ repeat 0
+
+onlinePdf :: (Pdf, [Session]) -> Pdf
+onlinePdf ((n, pdf), session:[])       = ((n + 1, newPdf),  
+onlinePdf ((n, pdf), session:sessions) = ((
+
+
+--
+
+
 
 -- Number of sessions that a person spent online
 nSessions :: [(Integer, Status)] -> Integer
