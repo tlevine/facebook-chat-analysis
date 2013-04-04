@@ -12,7 +12,7 @@ type Uid     = String
 type Nick    = String
 type NickUid = String
 
-newtype DateInteger = DateInteger Integer
+type DateInteger = Integer
 type Session = (DateInteger, DateInteger)
 type Users   = M.Map NickUid [Session]
 
@@ -72,42 +72,30 @@ nickTables nicks statusesByUser = M.map toSessions $ M.mapKeys nickLookup $ M.fr
       Nothing  -> uid
 
 ---------------------------------------
--- User status features
+-- Build user features and export
 ---------------------------------------
+
+-- Round to the nearest bin
+roundToBin :: Integer -> Integer -> Integer
+roundToBin binWidth datetime = binWidth * (round $ datetime/bin)
 
 -- Time span (list of bins)
 timeBins :: Integer -> DateInteger -> DateInteger -> [DateInteger]
-timeBins binWidth minDate maxDate = map fromSeconds [((toSeconds minDate)/binWidth)..((toSeconds maxDate)/binWidth)]
+timeBins binWidth minDate maxDate = [(r minDate)..(r maxDate)]
+  where
+    r = roundToBin binWidth
 
 -- Time online by bin, given an ascending list
-timeOnline :: [DateInteger] -> [Session] -> Integer
-timeOnline bins 
-
--- Number of session beginnings by bin
-nSessionBeginnings :: String -> [Session]
-nSessionBeginnings bin sessions = 
+timeOnline :: Integer -> [DateInteger] -> Integer
+timeOnline binWidth sessions = map ( \ (a, b) -> (r a, r b) ) sessions
   where
-    map (fst . (formatDateTime bin)) sessions
-
- :: String -> [Session] -> Integer
- timeFormat sessions = map sessionLength sessions
+    r = roundToBin binWidth
 
 -- Number of sessions that a person spent online
 nSessions :: [(Integer, Status)] -> Integer
 nSessions statuses = fromIntegral $ length $ filter (== LogIn) $ map snd statuses
 -}
 
----------------------------------------
--- Build user features and export
----------------------------------------
-{-
-http://hackage.haskell.org/packages/archive/probability/0.2.2/doc/html/Numeric-Probability-Distribution.html
-
-[(NickUid, DateTime, a)]
-
-export :: Users -> ([Session] -> [Integer]) ->
-type Users   = M.Map NickUid [Session]
--}
 ---------------------------------------
 main = do
 ---------------------------------------
