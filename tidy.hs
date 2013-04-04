@@ -75,18 +75,6 @@ nickTables nicks statusesByUser = M.map toSessions $ M.mapKeys nickLookup $ M.fr
 -- Build user features and export
 ---------------------------------------
 
--- Round to the nearest bin
-roundToBin :: Integer -> Integer -> Integer
-roundToBin binWidth datetime = binWidth * (round $ datetime/bin)
-
--- Time span (list of bins)
-
--- Time online by bin, given an ascending list
-timeOnline :: Integer -> [DateInteger] -> Integer
-timeOnline binWidth sessions = map ( \ (a, b) -> (r a, r b) ) sessions
-  where
-    r = roundToBin binWidth
-
 -- (n, counts)
 type Pdf = (Integer, M.Map DateTime Integer)
 
@@ -94,7 +82,7 @@ type Pdf = (Integer, M.Map DateTime Integer)
 nullPdf :: Integer -> DateInteger -> DateInteger -> Pdf
 nullPdf binWidth minDate maxDate = (0, M.fromList $ zip zero datetimes)
   where
-    r = roundToBin binWidth
+    r datetime = binWidth * (round $ datetime / binWidth) 
     datetimes = [(r minDate)..(r maxDate)]
     zeroes = take (length datetimes) $ repeat 0
 
@@ -110,15 +98,7 @@ onlinePdf ((n, pdf), session:sessions) = onlinePdf ((n + 1, newPdf), sessions)
     keysToIncrement = filter (\dt -> (dt >= (fst session)) && (dt < (snd session))) $ M.keys pdf
     newPdf = foldl incPdf pdf keysToIncrement
 
-
---
-
-
-
--- Number of sessions that a person spent online
-nSessions :: [(Integer, Status)] -> Integer
-nSessions statuses = fromIntegral $ length $ filter (== LogIn) $ map snd statuses
--}
+foo = onlinePdf (nullPdf (5 * 60) ...)
 
 ---------------------------------------
 main = do
