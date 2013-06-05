@@ -47,7 +47,7 @@ duration <- function(df, start.ts, end.ts) {
 
   # Deal with sessions spanning ts cuts
   if (df$status[1] == 'notavail') {
-    head.duration <- df$ts[1] - start.ts
+    head.duration <- start.ts - df$ts[1]
     df <- df[-1,]
   } else {
     head.duration <- 0
@@ -61,6 +61,9 @@ duration <- function(df, start.ts, end.ts) {
     df <- df[-nrow(df),]
   } else {
     tail.duration <- 0
+  }
+  if (nrow(df) == 0) {
+    return(head.duration + tail.duration)
   }
 
   # Now we can assume that the data frame starts with 'avail', ends with 'notavail' and alternates.
