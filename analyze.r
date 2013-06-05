@@ -27,8 +27,8 @@ munge <- function(df) {
 
   # Bin by time
   for (interval in names(INTERVALS)) {
-    start <- paste('start',interval,sep='.')
-    end <- paste('end',interval,sep='.')
+    start <- paste(interval,'start',sep='.')
+    end <- paste(interval,'end',sep='.')
     df[,start] <- as.POSIXct(cut.POSIXt(df$date, interval))
     df[,end] <- df[,start] + INTERVALS[[interval]](1)
   }
@@ -74,10 +74,10 @@ duration <- function(df, start.ts, end.ts) {
 
 # data.frame -> data.frame
 ply.duration <- function(df, interval) {
-  start <- paste('start',interval,sep='.')
-  end <- paste('end',interval,sep='.')
+  start <- paste(interval,'start',sep='.')
+  end <- paste(interval,'end',sep='.')
   ddply(df, c('uid', start), function(df) {
-    duration(df, as.numeric(strftime(df[1,start], '%s')), as.numeric(strftime(df[1,end], '%s')))
+    c(seconds.online = duration(df, as.numeric(strftime(df[1,start], '%s')), as.numeric(strftime(df[1,end], '%s'))))
   })
 }
 
