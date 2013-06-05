@@ -4,8 +4,7 @@ library(lubridate)
 library(ggplot2)
 
 # Time intervals
-INTERVALS = list(sec = seconds, min = minutes, hour = hours,
-                 day = days, week = weeks, month = months)
+INTERVALS = list(hour = hours, day = days, week = weeks, month = months)
 
 # IO data.frame
 load <- function(limit = NULL) {
