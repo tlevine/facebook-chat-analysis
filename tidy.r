@@ -8,11 +8,19 @@ load <- function() {
 }
 
 # data.frame -> data.frame
-set.types <- function(df) {
+munge <- function(df) {
+  # Convert types
   df$date <- as.POSIXct(df$ts, origin = '1970-01-01')
   df$uid <- as.factor(df$uid)
   df$nick <- as.factor(df$nick)
   df$status <- factor(df$status, levels = c('avail', 'notavail'))
+
+  # Bin by time
+  for (interval in c('sec', 'min', 'hour', 'day', 'week', 'month')) {
+    df[interval] <- cut.POSIXt(df$date, interval)
+  }
+  df$day.of.week <- strftime(df$date, '%A')
+
   df
 }
 
@@ -48,7 +56,7 @@ duration <- function(df, start.ts, end.ts) {
 # IO ()
 main <- function () {
   df <- load()
-  df <- set.types(df)
+  df <- munge(df)
   df
 }
 
