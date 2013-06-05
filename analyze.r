@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 library(RSQLite)
 library(lubridate)
+library(ggplot2)
 
 # Time intervals
 INTERVALS = list(sec = seconds, min = minutes, hour = hours,
@@ -76,9 +77,16 @@ duration <- function(df, start.ts, end.ts) {
 ply.duration <- function(df, interval) {
   start <- paste(interval,'start',sep='.')
   end <- paste(interval,'end',sep='.')
-  ddply(df, c('uid', start), function(df) {
-    c(seconds.online = duration(df, as.numeric(strftime(df[1,start], '%s')), as.numeric(strftime(df[1,end], '%s'))))
-  })
+  df <- df[df[,start] > min(df[,start]) & (df[,end] < max(df[,end])),]
+  if (nrow(df) == 0) {
+    # Return an empty data frame if the data aren't good.
+    df[1,][-1,]
+  } else {
+    # ply and calculate duration and whatnot.
+    ddply(df, c('uid', start), function(df) {
+      c(seconds.online = duration(df, as.numeric(strftime(df[1,start], '%s')), as.numeric(strftime(df[1,end], '%s'))))
+    })
+  }
 }
 
 # IO data.frame
