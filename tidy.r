@@ -2,6 +2,10 @@
 library(RSQLite)
 library(lubridate)
 
+# Time intervals
+INTERVALS = list(sec = seconds, min = minutes, hour = hours,
+                 day = days, week = weeks, month = months)
+
 # IO data.frame
 load <- function(limit = 1000) {
   if (is.numeric(limit)) {
@@ -22,13 +26,11 @@ munge <- function(df) {
   df$status <- factor(df$status, levels = c('avail', 'notavail'))
 
   # Bin by time
-  intervals = list(sec = seconds, min = minutes, hour = hours,
-                   day = days, week = weeks, month = months)
-  for (interval in names(intervals)) {
+  for (interval in names(INTERVALS)) {
     start <- paste('start',interval,sep='.')
     end <- paste('end',interval,sep='.')
     df[,start] <- as.POSIXct(cut.POSIXt(df$date, interval))
-    df[,end] <- df[,start] + intervals[[interval]](1)
+    df[,end] <- df[,start] + INTERVALS[[interval]](1)
   }
 
   df
@@ -50,6 +52,10 @@ duration <- function(df, start.ts, end.ts) {
   } else {
     head.duration <- 0
   }
+  if (nrow(df) == 0) {
+    return(head.duration)
+  }
+
   if (df$status[nrow(df)] == 'avail') {
     tail.duration <- end.ts - df$ts[nrow(df)]
     df <- df[-nrow(df),]
@@ -61,6 +67,15 @@ duration <- function(df, start.ts, end.ts) {
   avail <- ((1:nrow(df)) %% 2) == 1
   notavail <- ((1:nrow(df)) %% 2) == 0
   sum(df[notavail,'ts'] - df[avail,'ts']) + head.duration + tail.duration
+}
+
+# data.frame -> data.frame
+ply.duration <- function(df, interval) {
+  start <- paste('start',interval,sep='.')
+  end <- paste('end',interval,sep='.')
+  ddply(df, c('uid', start), function(df) {
+    duration(df, as.numeric(strftime(df[1,start], '%s')), as.numeric(strftime(df[1,end], '%s')))
+  })
 }
 
 # IO ()
