@@ -4,7 +4,7 @@ library(lubridate)
 library(ggplot2)
 
 # Time intervals
-INTERVALS = list(hour = hours, day = days, week = weeks, month = months)
+INTERVALS <- list(hour = hours, day = days, week = weeks, month = months)
 
 # IO data.frame
 load <- function(limit = NULL) {
@@ -13,7 +13,7 @@ load <- function(limit = NULL) {
   } else {
     limit <- ''
   }
-  connection = dbConnect('SQLite', dbname = '/tmp/logs.db')
+  connection <- dbConnect('SQLite', dbname = '/tmp/logs.db')
   dbGetQuery(connection, paste('SELECT "uid", "nick", "ts", "status" FROM log_status', limit, ';'))
 }
 
