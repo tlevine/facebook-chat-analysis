@@ -2,9 +2,12 @@
 library(RSQLite)
 
 # IO data.frame
-load <- function() {
+load <- function(limit = 1000) {
+  if (!is.numeric(limit)) {
+    limit <- ''
+  }
   connection = dbConnect('SQLite', dbname = '/tmp/logs.db')
-  dbGetQuery(connection, 'SELECT "uid", "nick", "ts", "status" FROM log_status;')
+  dbGetQuery(connection, paste('SELECT "uid", "nick", "ts", "status" FROM log_status LIMIT', limit, ';'))
 }
 
 # data.frame -> data.frame
