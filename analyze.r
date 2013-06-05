@@ -7,7 +7,7 @@ INTERVALS = list(sec = seconds, min = minutes, hour = hours,
                  day = days, week = weeks, month = months)
 
 # IO data.frame
-load <- function(limit = 1000) {
+load <- function(limit = NULL) {
   if (is.numeric(limit)) {
     limit <- paste('LIMIT', limit)
   } else {
@@ -81,10 +81,16 @@ ply.duration <- function(df, interval) {
   })
 }
 
-# IO ()
-main <- function () {
-  df <- load()
+# IO data.frame
+df.dev <- function () {
+  df <- load(limit = 1000)
   df <- munge(df)
   df
 }
 
+# IO ()
+main <- function() {
+  df <- load()
+  df <- munge(df)
+  ply.duration(df, 'hour')
+}
