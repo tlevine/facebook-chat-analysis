@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 library(RSQLite)
+library(lubridate)
 
 # IO data.frame
 load <- function(limit = 1000) {
@@ -21,10 +22,14 @@ munge <- function(df) {
   df$status <- factor(df$status, levels = c('avail', 'notavail'))
 
   # Bin by time
-  for (interval in c('sec', 'min', 'hour', 'day', 'week', 'month')) {
-    df[interval] <- cut.POSIXt(df$date, interval)
+  intervals = list(sec = seconds, min = minutes, hour = hours,
+                   day = days, week = weeks, month = months)
+  for (interval in names(intervals)) {
+    start <- paste('start',interval,sep='.')
+    end <- paste('end',interval,sep='.')
+    df[,start] <- as.POSIXct(cut.POSIXt(df$date, interval))
+    df[,end] <- df[,start] + intervals[[interval]](1)
   }
-  df$day.of.week <- strftime(df$date, '%A')
 
   df
 }
