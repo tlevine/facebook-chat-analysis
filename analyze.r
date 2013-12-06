@@ -84,7 +84,8 @@ ply.duration <- function(df, interval) {
   } else {
     # ply and calculate duration and whatnot.
     ddply(df, c('uid', start), function(df) {
-      c(seconds.online = duration(df, as.numeric(strftime(df[1,start], '%s')), as.numeric(strftime(df[1,end], '%s'))))
+      c(nick = as.character(df[1,'nick']),
+        seconds.online = duration(df, as.numeric(strftime(df[1,start], '%s')), as.numeric(strftime(df[1,end], '%s'))))
     })
   }
 }
@@ -96,28 +97,43 @@ df.dev <- function () {
   df
 }
 
-model <- function(df) {
-  f <- is.online ~ seconds.online.hourly.median +
-    seconds.online.userly.median +
-    day.of.week + hour.of.day
-
+features <- function(df) {
   df.hour <- ply.duration(df, 'hour')
-  df.hour$is.online <- df.hour$seconds.online > 0
+  df.hour <- subset(df.hour, seconds.online >= 0)
+
   userly <- ddply(df.hour, 'uid', function(df.hour){
     c(seconds.online.userly.median = median(df.hour$seconds.online))
   })[c('uid','seconds.online.userly.median')]
   hourly <- ddply(df.hour, 'hour.start', function(df.hour){
     c(seconds.online.hourly.median = median(df.hour$seconds.online))
   })[c('hour.start','seconds.online.hourly.median')]
-  df.hour <- plyr::join(df.hour, hourly)
-  df.hour <- plyr::join(df.hour, userly)
+
+  df.hour <- plyr::join(hourly, df.hour, type = 'full')
+  df.hour <- plyr::join(userly, df.hour, type = 'full')
+
+  df.hour[is.na(df.hour)] <- 0
+  df.hour$is.online <- df.hour$seconds.online > 0
   df.hour$day.of.week <- factor(strftime(df.hour$hour.start, '%A'),
     levels = c('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'))
   df.hour$hour.of.day <- as.numeric(strftime(df.hour$hour.start, '%H'))
+
+  df.hour
 }
+
+# model <- function(df.hour) {
+  f <- is.online ~ seconds.online.hourly.median +
+    seconds.online.userly.median +
+    day.of.week + hour.of.day
+  g <- seconds.online ~ seconds.online.hourly.median +
+    seconds.online.userly.median +
+    day.of.week + hour.of.day
+#   randomForest(f, data = df.hour)
+# }
 
 # IO ()
 main <- function() {
   df <- load()
   df <- munge(df)
+  df.features <- features(df)
+  model(df.features)
 }

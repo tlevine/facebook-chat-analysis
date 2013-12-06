@@ -18,6 +18,6 @@ union() {
 sqlite3 logs/2012-09-15.db .schema | sqlite3 "${db}"
 
 # Add the new data.
-for new in $(ls logs/2013-11-*.db); do
+for new in $(ls logs/2013-11-[23]*.db); do
   union "${new}" || echo Error in "${new}"
 done
