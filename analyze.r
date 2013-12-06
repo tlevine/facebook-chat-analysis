@@ -2,6 +2,7 @@
 library(RSQLite)
 library(lubridate)
 library(ggplot2)
+library(plyr)
 
 # Time intervals
 INTERVALS <- list(hour = hours, day = days, week = weeks, month = months)
@@ -95,9 +96,28 @@ df.dev <- function () {
   df
 }
 
+model <- function(df) {
+  f <- is.online ~ seconds.online.hourly.median +
+    seconds.online.userly.median +
+    day.of.week + hour.of.day
+
+  df.hour <- ply.duration(df, 'hour')
+  df.hour$is.online <- df.hour$seconds.online > 0
+  userly <- ddply(df.hour, 'uid', function(df.hour){
+    c(seconds.online.userly.median = median(df.hour$seconds.online))
+  })[c('uid','seconds.online.userly.median')]
+  hourly <- ddply(df.hour, 'hour.start', function(df.hour){
+    c(seconds.online.hourly.median = median(df.hour$seconds.online))
+  })[c('hour.start','seconds.online.hourly.median')]
+  df.hour <- plyr::join(df.hour, hourly)
+  df.hour <- plyr::join(df.hour, userly)
+  df.hour$day.of.week <- factor(strftime(df.hour$hour.start, '%A'),
+    levels = c('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'))
+  df.hour$hour.of.day <- as.numeric(strftime(df.hour$hour.start, '%H'))
+}
+
 # IO ()
 main <- function() {
   df <- load()
   df <- munge(df)
-  ply.duration(df, 'hour')
 }
